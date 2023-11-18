@@ -1,0 +1,107 @@
+setting up kubernetes-dashboard 
+
+pre-requisite
+
+1. have ur cluter up and running
+
+browsing the web <kubernetes.io>
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+
+2. create a service account yml, cluster role bindinyml, secrets  and apply them the kubernets-dashboard namespace
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-account
+  namespace: kubernetes-dashboard
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: my-cluster-role-binding
+subjects:
+- kind: ServiceAccount
+  name: my-service-account
+  namespace: kubernetes-dashboard
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin  # Replace with the appropriate ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-secret
+  namespace: kubernetes-dashboard
+  annotations:
+    kubernetes.io/service-account.name: my-service-account
+type: kubernetes.io/service-account-token
+
+
+3. access the web ui using 
+
+kubectl proxy
+
+4. get the secret to access the gui by using
+
+kubectl get secret -n 
+kubectl describe <name>
+
+
+
+***********************************************************************************
+
+******************************************************************
+
+setting promethus and grafana using helm
+
+pre-requite
+1. have ur cluter up and running
+
+2. browse the web <artifact.io>
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install [RELEASE_NAME] prometheus-community/prometheus
+
+3. kubectl get all 
+
+to see all the processes installed
+
+4. the process must have been expose to cluster ip you can change it to nodeport by using
+
+first do < kubectl get svc>
+
+kubectl expose service mywrk-prometheus-server --type=NodePort --target-port=9090 --name=prometheus-serverreel
+
+5. go to aws console and edit ur traffic rule from security to allow traffic
+
+6. access the promethus using url of ur node and the port 
+
+
+****************************************************************************
+setting up grafana
+*************************************************************
+ 1. browse web <artifact.io>
+
+ helm repo add bitnami https://charts.bitnami.com/bitnami
+ helm install my-grafana bitnami/grafana --version 9.6.0
+
+ 2. after installing ur promethus 
+
+ use the command kubectl get all -n <namespace>
+
+ 3.  expose the grafana servive to use nodeport so you acceses it externally using
+
+ kubectl expose service mywrk-prometheus-server --type=NodePort --target-port=9090 --name=prometheus-serverreel
+ 
+ 4. acess the webgui, you need a password and username 
+
+run this command to get the user and secret <kubectl get secret --namespace default my-grafana-admin -o yaml>
+USERNAME: admin
+
+password needs to put decode <echo "R3U3ZEFSS2pycA==" | openssl base64 -d ; echo>
+
+5. when loged into grafana click on the data source option and then add promethuse url and the promethus as ur source
+
+6. click on home and then click on dashboard to import from grafana.labs/grafana/dashboards/6417
